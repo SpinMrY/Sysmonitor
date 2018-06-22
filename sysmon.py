@@ -83,7 +83,7 @@ def ListenEmail():
         time.sleep(15)
     else:
         print('Received instructions, processing...')
-        cmd=stat[0:6]
+        cmd=stat[0:5]
         print(cmd)
         if cmd=='state':
             print('Checking server status...')
