@@ -1,13 +1,11 @@
-#
 import os
 import myconfig
-import commands
+import subprocess
 import time
 import smtplib
 import imaplib
 import email
 from email.mime.text import MIMEText
-from email.utils import parseaddr, formataddr
 from email import encoders
 from email.header import Header
                
@@ -27,35 +25,23 @@ mainEA=[master]
 
 #Get current system information
 def GetUptime():
- #   os.system("uptime > upo")
- #   tmp=open("./upo")
- #   Up=tmp.read()
- #   tmp.close()
- #   os.system('rm -f ./upo')
-    return commands.getoutput('uptime')
+    return subprocess.getoutput('uptime')
     
 def GetCPU():
-#    os.system("dstat -tclmn --nocolor 1 5 > cpu")
-#    tmp=open("./cpu")
-#    Cpu=tmp.read()
-#    tmp.close()
-#    os.system("lscpu > cpu")
-#    tmp=open("./cpu")
-#    Up=tmp.read()
-#    tmp.close()
-#    os.system('rm -f ./cpu')
-    cpustat = commands.getoutput('dstat -tclmn --nocolor 1 5 > cpu')
-    cpuinfo = commands.getoutput('lscpu')
+    os.system("dstat -tclmn --nocolor 1 5 > cpu")
+    tmp=open("./cpu")
+    cpustat=tmp.read()
+    tmp.close()
+    os.system('rm -f ./cpu')
+    cpuinfo=subprocess.getoutput('lscpu')
     return cpustat + '\n' + cpuinfo
 
 def GetTemp():
-#    tmp=open("/sys/class/thermal/thermal_zone0/temp")
-#   Temp=tmp.read()
-#   Tempfl=float(Temp)/1000
-#   Temp="Temperature:\n%f"%(Tempfl)
-#   tmp.close()
-    return commands.getoutput('cat /sys/class/thermal/thermal_zone0/temp')
-
+    Temp=subprocess.getoutput('cat /sys/class/thermal/thermal_zone0/temp')
+    Tempfl=float(Temp)/1000
+    Temp="Temperature:\n%f ℃"%(Tempfl)
+    return Temp
+    
 #Get recent message
 def GetRecentEmail():
     eserver.select()
@@ -94,7 +80,7 @@ def ListenEmail():
         print(cmd)
         if cmd=='state':
             print('Checking server status...')
-            msgstr='UPTIME:\n'+GetUptime()+'\nCPU:\n'+GetCPU()+'\n'+GetTemp()
+            msgstr='UPTIME:\n'+GetUptime()+'\n\nCPU:\n'+GetCPU()+'\n\n'+GetTemp()
             msgstr=msgstr.replace('\x1b[0;0m','').replace('\x1b[7l','')
             print(msgstr)
             msg=[]
@@ -154,7 +140,7 @@ def ListenEmail():
 #主程序
 def main():
     if os.getuid() != 0:
-        print("需要 root 身份才能执行本程序。")
+        print("Need root privileges.")
         exit(1)
 
     while True:
