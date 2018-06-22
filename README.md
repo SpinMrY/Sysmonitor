@@ -13,7 +13,7 @@
 ---
 # 运行本程序
 
-*要运行此程序，你需要 `Python 27` 运行环境。*    
+*要运行此程序，你需要 `Python 3` 运行环境。*    
 
 ### 其他要求
 
@@ -27,9 +27,9 @@ git clone https://github.com/SpinMrY/Sysmonitor.git
 cd Sysmonitor
 ```
    
-确保你已经安装了 `Python 2.7` ，然后输入：
+确保你已经安装了 `Python 3` ，然后输入：
 ```
-screen python ./sysmon.py
+screen python3 ./sysmon.py
 ```
 
 按下 `Ctrl-A` `D` 以返回当前 shell ，保持后台运行。
