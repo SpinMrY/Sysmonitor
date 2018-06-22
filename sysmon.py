@@ -1,4 +1,7 @@
+#
 import os
+import myconfig
+import commands
 import time
 import smtplib
 import imaplib
@@ -9,11 +12,13 @@ from email import encoders
 from email.header import Header
                
 #imap server settings
-user=open('./config/username').read().splitlines()[0]
-pass_=open('./config/password').read().splitlines()[0]
-master=open('./config/master').read().splitlines()[0]
+user        = myconfig.emailname
+pass_       = myconfig.emailpassword
+master      = myconfig.receivefrom
+IMAPServer  = myconfig.imapserver
+SMTPServer  = myconfig.smtpserver
 
-eserver=imaplib.IMAP4(host="imap.126.com")
+eserver=imaplib.IMAP4(host=IMAPServer)
 eserver.login(user,pass_)
 
 print("Login successfully!")
@@ -22,32 +27,34 @@ mainEA=[master]
 
 #Get current system information
 def GetUptime():
-    os.system("uptime > upo")
-    tmp=open("./upo")
-    Up=tmp.read()
-    tmp.close()
-    os.system('rm -f ./upo')
-    return Up
+ #   os.system("uptime > upo")
+ #   tmp=open("./upo")
+ #   Up=tmp.read()
+ #   tmp.close()
+ #   os.system('rm -f ./upo')
+    return commands.getoutput('uptime')
     
 def GetCPU():
-    os.system("dstat -tclmn --nocolor 1 5 > cpu")
-    tmp=open("./cpu")
-    Cpu=tmp.read()
-    tmp.close()
-    os.system("lscpu > cpu")
-    tmp=open("./cpu")
-    Up=tmp.read()
-    tmp.close()
-    os.system('rm -f ./cpu')
-    return Cpu+'\n'+Up
+#    os.system("dstat -tclmn --nocolor 1 5 > cpu")
+#    tmp=open("./cpu")
+#    Cpu=tmp.read()
+#    tmp.close()
+#    os.system("lscpu > cpu")
+#    tmp=open("./cpu")
+#    Up=tmp.read()
+#    tmp.close()
+#    os.system('rm -f ./cpu')
+    cpustat = commands.getoutput('dstat -tclmn --nocolor 1 5 > cpu')
+    cpuinfo = commands.getoutput('lscpu')
+    return cpustat + '\n' + cpuinfo
 
 def GetTemp():
-    tmp=open("/sys/class/thermal/thermal_zone0/temp")
-    Temp=tmp.read()
-    Tempfl=float(Temp)/1000
-    Temp="Temperature:\n%f"%(Tempfl)
-    tmp.close()
-    return Temp
+#    tmp=open("/sys/class/thermal/thermal_zone0/temp")
+#   Temp=tmp.read()
+#   Tempfl=float(Temp)/1000
+#   Temp="Temperature:\n%f"%(Tempfl)
+#   tmp.close()
+    return commands.getoutput('cat /sys/class/thermal/thermal_zone0/temp')
 
 #Get recent message
 def GetRecentEmail():
@@ -97,7 +104,7 @@ def ListenEmail():
             title='Server status %s' % str(time.asctime(time.localtime(time.time())))
             msg['Subject']=title
             try:
-                sser=smtplib.SMTP('smtp.126.com')
+                sser=smtplib.SMTP(SMTPServer)
                 sser.login(user,pass_)
                 print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
@@ -113,7 +120,7 @@ def ListenEmail():
             msg['To']=','.join(mainEA)
             msg['Subject']='Server shutdown'
             try:
-                sser=smtplib.SMTP('smtp.126.com')
+                sser=smtplib.SMTP(SMTPServer)
                 sser.login(user,pass_)
                 print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
@@ -133,7 +140,7 @@ def ListenEmail():
             msg['To']=','.join(mainEA)
             msg['Subject']='Excute command'
             try:
-                sser=smtplib.SMTP('smtp.126.com')
+                sser=smtplib.SMTP(SMTPServer)
                 sser.login(user,pass_)
                 print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
@@ -145,8 +152,17 @@ def ListenEmail():
             print('Instruction identification error')
 
 #主程序
-while True:
-    try:
-        ListenEmail()
-    except BaseException:
-        print("Something went wrong")
+def main():
+    if os.getuid() != 0:
+        print("需要 root 身份才能执行本程序。")
+        exit(1)
+
+    while True:
+        try:
+            ListenEmail()
+        except BaseException:
+            print("Something went wrong")
+
+
+if __name__ == '__main__' :
+    main()
