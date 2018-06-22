@@ -8,7 +8,7 @@ from email.utils import parseaddr, formataddr
 from email import encoders
 from email.header import Header
                
-#imap服务器设置
+#imap server settings
 user=open('./config/username').read().splitlines()[0]
 pass_=open('./config/password').read().splitlines()[0]
 master=open('./config/master').read().splitlines()[0]
@@ -16,12 +16,11 @@ master=open('./config/master').read().splitlines()[0]
 eserver=imaplib.IMAP4(host="imap.126.com")
 eserver.login(user,pass_)
 
-print("邮箱登录成功")
+print("Login successfully!")
 
-#设置
 mainEA=[master]
 
-#获取当前系统信息
+#Get current system information
 def GetUptime():
     os.system("uptime > upo")
     tmp=open("./upo")
@@ -50,7 +49,7 @@ def GetTemp():
     tmp.close()
     return Temp
 
-#获取未读邮件，有返回邮件标题，没有返回none
+#Get recent message
 def GetRecentEmail():
     eserver.select()
     type,data=eserver.search(None, 'Recent')
@@ -69,7 +68,7 @@ def GetRecentEmail():
             print(title)
             return title
         else:
-            print('发件人认证失败，指令已拦截')
+            print('Sender authentication failed, instruction was intercepted')
             return 'none'
         
 def ListenEmail():
@@ -77,17 +76,17 @@ def ListenEmail():
     try:
         stat=GetRecentEmail()
     except BaseException:
-        print("获取失败")
+        print("Failed to get")
     if stat=='none':
         print(time.asctime(time.localtime(time.time())))
-        print('未收到指令，待命中...')
+        print('Failed to receive instructions, pending...')
         time.sleep(15)
     else:
-        print('收到指令，处理中...')
-        cmd=stat[0:5]
+        print('Received instructions, processing...')
+        cmd=stat[0:6]
         print(cmd)
         if cmd=='state':
-            print('正在检查服务器状况...')
+            print('Checking server status...')
             msgstr='UPTIME:\n'+GetUptime()+'\nCPU:\n'+GetCPU()+'\n'+GetTemp()
             msgstr=msgstr.replace('\x1b[0;0m','').replace('\x1b[7l','')
             print(msgstr)
@@ -95,30 +94,30 @@ def ListenEmail():
             msg=MIMEText(msgstr,'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
-            title='服务器状况 %s' % str(time.asctime(time.localtime(time.time())))
+            title='Server status %s' % str(time.asctime(time.localtime(time.time())))
             msg['Subject']=title
             try:
                 sser=smtplib.SMTP('smtp.126.com')
                 sser.login(user,pass_)
-                print('登录成功!')
+                print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
-                print('处理完成！')
+                print('Process successfully!')
                 sser.close()
             except smtplib.SMTPException as e:
                 print(e)
             time.sleep(5)
         elif cmd=='shutd':
             msg=[]
-            msg=MIMEText(('正在关机 %s' % str(time.asctime(time.localtime(time.time())))),'plain','utf-8')
+            msg=MIMEText(('Shutting down... %s' % str(time.asctime(time.localtime(time.time())))),'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
-            msg['Subject']='服务器关机'
+            msg['Subject']='Server shutdown'
             try:
                 sser=smtplib.SMTP('smtp.126.com')
                 sser.login(user,pass_)
-                print('登录成功!')
+                print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
-                print('处理完成！')
+                print('Process successfully！')
             except smtplib.SMTPException as e:
                 print(e)
             time.sleep(5)
@@ -127,27 +126,27 @@ def ListenEmail():
             syscmd=stat[6:len(stat)]
             print(syscmd)
             os.system(syscmd)
-            msgstr='%s 命令执行成功！'%syscmd
+            msgstr='Command executed successfully!%s '%syscmd
             msg=[]
-            msg=MIMEText(('执行%s命令，时间%s'%(msgstr,str(time.asctime(time.localtime(time.time()))))),'plain','utf-8')
+            msg=MIMEText(('Excuted %s command，time%s'%(msgstr,str(time.asctime(time.localtime(time.time()))))),'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
-            msg['Subject']='命令执行'
+            msg['Subject']='Excute command'
             try:
                 sser=smtplib.SMTP('smtp.126.com')
                 sser.login(user,pass_)
-                print('登录成功!')
+                print('Login successfully!')
                 sser.sendmail(user,mainEA,msg.as_string())
-                print('处理完成！')
+                print('Process successfully！')
             except smtplib.SMTPException as e:
                 print(e)
             time.sleep(5)
         else:
-            print('指令识别失败')
+            print('Instruction identification error')
 
 #主程序
 while True:
     try:
         ListenEmail()
     except BaseException:
-        print("出了点小问题...")
+        print("Something went wrong")
