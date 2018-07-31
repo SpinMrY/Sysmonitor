@@ -24,30 +24,21 @@ print("Login successfully!")
 mainEA=[master]
 
 #Get current system information
-def GetUptime():
-    return subprocess.getoutput('uptime')
-    
-def GetCPU():
-    os.system("dstat -tclmn --nocolor 1 5 > cpu")
-    tmp=open("./cpu")
-    cpustat=tmp.read()
-    tmp.close()
-    os.system('rm -f ./cpu')
+def GetSysInfo():
+    uptime=subprocess.getoutput('uptime')
+    cpustat=subprocess.getoutput("dstat --tclmn --nocolor 1 5")
     cpuinfo=subprocess.getoutput('lscpu')
-    return cpustat + '\n' + cpuinfo
-
-def GetTemp():
     Temp=subprocess.getoutput('cat /sys/class/thermal/thermal_zone0/temp')
     Tempfl=float(Temp)/1000
     Temp="Temperature:\n%f ℃"%(Tempfl)
-    return Temp
+    return 'Uptime:'+uptime+'\nCPU Stat:'+cpustat+'\n'+cpuinfo+'\n'+Temp
     
 #Get recent message
 def GetRecentEmail():
     eserver.select()
     type,data=eserver.search(None, 'Recent')
     if data[0]==b'':
-        return 'none'
+        return
     else:
         newlist=data[0].split()
         type,data=eserver.fetch(newlist[0], '(RFC822)')
@@ -62,7 +53,7 @@ def GetRecentEmail():
             return title
         else:
             print('Sender authentication failed, instruction was intercepted')
-            return 'none'
+            return
         
 def ListenEmail():
     stat='none'
@@ -71,7 +62,7 @@ def ListenEmail():
     except BaseException:
         print("Failed to get")
     if stat=='none':
-        print(time.asctime(time.localtime(time.time())))
+        print(time.ctime())
         print('Failed to receive instructions, pending...')
         time.sleep(15)
     else:
@@ -80,14 +71,13 @@ def ListenEmail():
         print(cmd)
         if cmd=='state':
             print('Checking server status...')
-            msgstr='UPTIME:\n'+GetUptime()+'\n\nCPU:\n'+GetCPU()+'\n\n'+GetTemp()
+            msgstr=GetSysInfo()
             msgstr=msgstr.replace('\x1b[0;0m','').replace('\x1b[7l','')
             print(msgstr)
-            msg=[]
             msg=MIMEText(msgstr,'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
-            title='Server status %s' % str(time.asctime(time.localtime(time.time())))
+            title='Server status %s' % str(time.ctime())
             msg['Subject']=title
             try:
                 sser=smtplib.SMTP(SMTPServer)
@@ -100,8 +90,7 @@ def ListenEmail():
                 print(e)
             time.sleep(5)
         elif cmd=='shutd':
-            msg=[]
-            msg=MIMEText(('Shutting down... %s' % str(time.asctime(time.localtime(time.time())))),'plain','utf-8')
+            msg=MIMEText(('Shutting down... %s' % str(time.ctime()),'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
             msg['Subject']='Server shutdown'
@@ -120,8 +109,7 @@ def ListenEmail():
             print(syscmd)
             os.system(syscmd)
             msgstr='Command executed successfully!%s '%syscmd
-            msg=[]
-            msg=MIMEText(('Excuted %s command，time%s'%(msgstr,str(time.asctime(time.localtime(time.time()))))),'plain','utf-8')
+            msg=MIMEText(('Excuted %s command，time%s'%(msgstr,str(time.ctime()),'plain','utf-8')
             msg['Form']='{}'.format(user)
             msg['To']=','.join(mainEA)
             msg['Subject']='Excute command'
