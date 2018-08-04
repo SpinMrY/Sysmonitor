@@ -71,9 +71,10 @@ def SendEmail(subject, msgstr):
         print('Login successfully!')
         sser.sendmail(user, [master], msg.as_string())
         print('Processed successfully')
+        sser.close()
     except smtplib.SMTPException as e:
         print(e)
-
+    
 
 def ListenEmail():
     stat = None
