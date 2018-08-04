@@ -100,7 +100,7 @@ def ListenEmail():
             print(syscmd)
             status = subprocess.getoutput('uptime')
             title = 'Command executed successfully!%s' % syscmd
-            msgstr = 'Executed %s command,Return:\n%s' % (msgstr, status)
+            msgstr = 'Executed %s command,Return:\n%s' % (syscmd, status)
             SendEmail(title, msgstr)
         else:
             print('Instruction identification error')
